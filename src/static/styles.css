@@ -622,6 +622,7 @@ footer {
 #user-status {
   display: flex;
   align-items: center;
+  gap: 8px;
 }
 
 #user-info {
@@ -666,9 +667,258 @@ footer {
 }
 
 .announcement-banner {
-  background-color: var(--success);
+  background: linear-gradient(135deg, var(--success) 0%, #388e3c 100%);
   color: white;
   text-align: center;
-  padding: 15px;
-  font-weight: bold;
+  padding: 12px 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0.2px;
+  border-radius: 0 0 6px 6px;
+  margin-bottom: 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  animation: slidein 0.4s ease;
+}
+
+@keyframes slidein {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Announcements Management Modal ───────────────────────────────────────── */
+
+.announcements-modal-content {
+  max-width: 600px !important;
+  width: 95% !important;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.announcements-modal-content h3 {
+  color: var(--primary);
+  font-size: 1.2rem;
+  padding-right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.announcements-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ann-empty {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 12px;
+}
+
+.ann-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  transition: box-shadow 0.2s;
+}
+
+.ann-item:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.ann-expired {
+  opacity: 0.6;
+}
+
+.ann-item-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ann-item-message {
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.ann-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.ann-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.ann-badge.active    { background: var(--success-light); color: var(--success); }
+.ann-badge.expired   { background: var(--error-light);   color: var(--error); }
+.ann-badge.scheduled { background: var(--warning-light); color: #7a4f00; }
+
+.ann-date {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.ann-item-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.btn-icon {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 7px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.btn-icon:hover {
+  background: var(--background);
+  border-color: var(--border-focus);
+  color: var(--text-primary);
+}
+
+/* Form row (two columns) */
+.form-row {
+  display: flex;
+  gap: 12px;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+/* Form labels */
+.required {
+  color: var(--error);
+  margin-left: 2px;
+}
+
+.optional {
+  color: var(--text-secondary);
+  font-weight: normal;
+  font-size: 0.78rem;
+}
+
+/* Textarea inside announcement form */
+#ann-message {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  resize: vertical;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#ann-message:focus {
+  outline: none;
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 2px rgba(83,75,174,0.1);
+}
+
+/* Form error */
+.form-error {
+  background: var(--error-light);
+  color: var(--error);
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  padding: 7px 10px;
+  font-size: 0.82rem;
+}
+
+/* Form action buttons row */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.btn-primary {
+  background: linear-gradient(145deg, var(--primary), var(--primary-dark));
+  color: white;
+  border: none;
+  padding: 7px 18px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+
+.btn-primary:hover { opacity: 0.9; }
+
+.btn-secondary {
+  background: var(--background);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  padding: 7px 16px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-secondary:hover { background: var(--border); }
+
+/* Close button for modals using the new class */
+.modal-close-btn {
+  position: absolute;
+  right: 12px;
+  top: 8px;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  line-height: 1;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+/* Announcement section heading */
+#announcement-form-section h4 {
+  font-size: 0.95rem;
+  color: var(--primary);
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .form-row {
+    flex-direction: column;
+  }
+  .announcements-modal-content {
+    max-height: 95vh;
+  }
 }
