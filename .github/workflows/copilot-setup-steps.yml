@@ -36,8 +36,8 @@ jobs:
           echo "From directory: $(pwd)"
           echo "Before installing Copilot skills..."
           tree -a
-          gh skill install github/awesome-copilot python-mcp-server-generator --agent github-copilot --scope project
-          gh skill install github/awesome-copilot pytest-coverage --agent github-copilot --scope user
+          gh skill install github/awesome-copilot python-mcp-server-generator --agent github-copilot --scope user 
+          gh skill install github/awesome-copilot pytest-coverage --agent github-copilot --scope project
           echo "After installing Copilot skills..."
           tree -a
           echo "Show git status..."
