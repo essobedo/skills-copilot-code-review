@@ -31,6 +31,8 @@ jobs:
         env:
           GIT_TOKEN: ${{ secrets.GIT_ACTION_TOKEN }}
         run: |
+          echo "Current branch via ref_name: ${{ github.ref_name }}"
+          echo "Current branch via head_ref: ${{ github.head_ref }}"
           echo "From directory: $(pwd)"
           echo "Before installing Copilot skills..."
           tree -a
