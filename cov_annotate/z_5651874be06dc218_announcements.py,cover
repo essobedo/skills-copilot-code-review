@@ -1,0 +1,195 @@
+> """
+> Announcements endpoints for the High School Management System API
+> """
+  
+> from fastapi import APIRouter, HTTPException, Query
+> from typing import Any, Dict, List, Optional
+> from datetime import date
+  
+> from ..database import announcements_collection, teachers_collection
+  
+> router = APIRouter(
+>     prefix="/announcements",
+>     tags=["announcements"]
+> )
+  
+  
+> def _announcement_to_dict(doc: Dict[str, Any]) -> Dict[str, Any]:
+>     """Convert a MongoDB document to a serialisable dict."""
+>     return {
+>         "id": str(doc["_id"]),
+>         "message": doc["message"],
+>         "start_date": doc.get("start_date"),
+>         "expiration_date": doc["expiration_date"],
+>     }
+  
+  
+> def _require_teacher(teacher_username: Optional[str]) -> Dict[str, Any]:
+>     """Raise 401 when no valid teacher username is supplied."""
+>     if not teacher_username:
+>         raise HTTPException(status_code=401, detail="Authentication required")
+>     teacher = teachers_collection.find_one({"_id": teacher_username})
+>     if not teacher:
+>         raise HTTPException(status_code=401, detail="Invalid teacher credentials")
+>     return teacher
+  
+  
+> @router.get("", response_model=List[Dict[str, Any]])
+> @router.get("/", response_model=List[Dict[str, Any]])
+> def get_active_announcements() -> List[Dict[str, Any]]:
+>     """
+>     Return all announcements that are currently active.
+  
+>     An announcement is active when today's date is within
+>     [start_date (inclusive, optional), expiration_date (inclusive)].
+>     """
+>     today = date.today().isoformat()
+  
+>     query: Dict[str, Any] = {
+>         "expiration_date": {"$gte": today},
+>     }
+  
+>     results = []
+>     for doc in announcements_collection.find(query):
+>         ann = _announcement_to_dict(doc)
+          # If a start_date is set, skip announcements that haven't started yet
+>         if ann["start_date"] and ann["start_date"] > today:
+>             continue
+>         results.append(ann)
+  
+>     return results
+  
+  
+> @router.get("/all", response_model=List[Dict[str, Any]])
+> def get_all_announcements(
+>     teacher_username: str = Query(..., description="Authenticated teacher username")
+> ) -> List[Dict[str, Any]]:
+>     """
+>     Return every announcement (active or expired).
+  
+>     Requires teacher authentication.
+>     """
+>     _require_teacher(teacher_username)
+>     return [_announcement_to_dict(doc) for doc in announcements_collection.find()]
+  
+  
+> @router.post("", response_model=Dict[str, Any], status_code=201)
+> def create_announcement(
+>     message: str,
+>     expiration_date: str,
+>     start_date: Optional[str] = None,
+>     teacher_username: str = Query(..., description="Authenticated teacher username"),
+> ) -> Dict[str, Any]:
+>     """
+>     Create a new announcement.
+  
+>     - **message**: Text content of the announcement.
+>     - **expiration_date**: ISO date (YYYY-MM-DD) after which the announcement is hidden.
+>     - **start_date**: Optional ISO date (YYYY-MM-DD) before which the announcement is hidden.
+  
+>     Requires teacher authentication.
+>     """
+>     _require_teacher(teacher_username)
+  
+      # Validate dates
+>     try:
+>         exp = date.fromisoformat(expiration_date)
+>     except ValueError:
+>         raise HTTPException(status_code=422, detail="expiration_date must be a valid ISO date (YYYY-MM-DD)")
+  
+>     if start_date:
+>         try:
+>             start = date.fromisoformat(start_date)
+>         except ValueError:
+>             raise HTTPException(status_code=422, detail="start_date must be a valid ISO date (YYYY-MM-DD)")
+>         if start > exp:
+>             raise HTTPException(status_code=422, detail="start_date must not be after expiration_date")
+  
+>     doc: Dict[str, Any] = {
+>         "message": message,
+>         "expiration_date": expiration_date,
+>     }
+>     if start_date:
+>         doc["start_date"] = start_date
+  
+>     result = announcements_collection.insert_one(doc)
+>     created = announcements_collection.find_one({"_id": result.inserted_id})
+>     return _announcement_to_dict(created)
+  
+  
+> @router.put("/{announcement_id}", response_model=Dict[str, Any])
+> def update_announcement(
+>     announcement_id: str,
+>     message: str,
+>     expiration_date: str,
+>     start_date: Optional[str] = None,
+>     teacher_username: str = Query(..., description="Authenticated teacher username"),
+> ) -> Dict[str, Any]:
+>     """
+>     Update an existing announcement.
+  
+>     Requires teacher authentication.
+>     """
+>     _require_teacher(teacher_username)
+  
+      # Validate dates
+>     try:
+>         exp = date.fromisoformat(expiration_date)
+>     except ValueError:
+>         raise HTTPException(status_code=422, detail="expiration_date must be a valid ISO date (YYYY-MM-DD)")
+  
+>     if start_date:
+>         try:
+>             start = date.fromisoformat(start_date)
+>         except ValueError:
+>             raise HTTPException(status_code=422, detail="start_date must be a valid ISO date (YYYY-MM-DD)")
+>         if start > exp:
+>             raise HTTPException(status_code=422, detail="start_date must not be after expiration_date")
+  
+>     from bson import ObjectId
+>     try:
+>         oid = ObjectId(announcement_id)
+>     except Exception:
+>         raise HTTPException(status_code=404, detail="Announcement not found")
+  
+>     update: Dict[str, Any] = {
+>         "message": message,
+>         "expiration_date": expiration_date,
+>     }
+>     if start_date:
+>         update["start_date"] = start_date
+>     else:
+          # Remove start_date if it was cleared
+>         announcements_collection.update_one({"_id": oid}, {"$unset": {"start_date": ""}})
+  
+>     result = announcements_collection.update_one({"_id": oid}, {"$set": update})
+>     if result.matched_count == 0:
+>         raise HTTPException(status_code=404, detail="Announcement not found")
+  
+>     updated = announcements_collection.find_one({"_id": oid})
+>     return _announcement_to_dict(updated)
+  
+  
+> @router.delete("/{announcement_id}")
+> def delete_announcement(
+>     announcement_id: str,
+>     teacher_username: str = Query(..., description="Authenticated teacher username"),
+> ) -> Dict[str, Any]:
+>     """
+>     Delete an announcement by ID.
+  
+>     Requires teacher authentication.
+>     """
+>     _require_teacher(teacher_username)
+  
+>     from bson import ObjectId
+>     try:
+>         oid = ObjectId(announcement_id)
+>     except Exception:
+>         raise HTTPException(status_code=404, detail="Announcement not found")
+  
+>     result = announcements_collection.delete_one({"_id": oid})
+>     if result.deleted_count == 0:
+>         raise HTTPException(status_code=404, detail="Announcement not found")
+  
+>     return {"message": "Announcement deleted successfully"}
