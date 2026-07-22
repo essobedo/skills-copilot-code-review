@@ -1,0 +1,33 @@
+name: "Copilot Setup Steps"
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+permissions:
+  contents: read
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Setup Java"
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: "Checkout sources"
+        uses: actions/checkout@v7
+
+      - name: "Copilot setup"
+        shell: bash
+        env:
+          GIT_TOKEN: ${{ secrets.GIT_ACTION_TOKEN }}
+        run: gh skill install github/awesome-copilot prompt-optimizer --agent github-copilot --scope project
