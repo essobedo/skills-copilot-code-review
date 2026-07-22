@@ -30,4 +30,10 @@ jobs:
         shell: bash
         env:
           GIT_TOKEN: ${{ secrets.GIT_ACTION_TOKEN }}
-        run: gh skill install github/awesome-copilot prompt-optimizer --agent github-copilot --scope project
+        run: |
+          echo "From directory: $(pwd)"
+          echo "Before installing Copilot skills..."
+          tree -a
+          gh skill install github/awesome-copilot prompt-optimizer --agent github-copilot --scope project
+          echo "After installing Copilot skills..."
+          tree -a
