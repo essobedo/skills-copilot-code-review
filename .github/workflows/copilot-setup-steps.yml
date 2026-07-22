@@ -39,3 +39,5 @@ jobs:
           gh skill install github/awesome-copilot prompt-optimizer --agent github-copilot --scope project
           echo "After installing Copilot skills..."
           tree -a
+          echo "Show git status..."
+          git status
